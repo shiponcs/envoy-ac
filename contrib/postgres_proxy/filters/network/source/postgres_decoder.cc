@@ -310,7 +310,13 @@ void DecoderImpl::processMessageBody(Buffer::Instance& data, absl::string_view d
     for (const auto& action : actions) {
       action(this);
     }
+    if(direction == "Frontend") {
+      std::cout << message_ << " user: " << attributes_["user"] << " database: " << attributes_["database"];
+    } else if (direction == "Backend"){
 
+      //Here, std::get<0>(BE_messages_.messages_['C']) is "CommandComplete" which means the query was executed normally
+      std::cout << (std::get<0>(BE_messages_.messages_['C']) == std::get<0>(msg) ? " [Success]" : " [Failed]") << "\n";
+    }
     // Drop the linearized message.
     message_.erase();
   }
@@ -375,7 +381,7 @@ Decoder::Result DecoderImpl::onDataInSync(Buffer::Instance& data, bool frontend)
     return Decoder::Result::NeedMoreData;
   }
 
-  if (validationResult == Message::ValidationFailed) {
+  if (validationResult == Message::ValidationFailed && frontend) {
     // Message does not conform to the expected format. Move to out-of-sync state.
     data.drain(data.length());
     state_ = State::OutOfSyncState;
