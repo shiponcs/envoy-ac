@@ -10,6 +10,7 @@ namespace MySQLProxy {
 
 class ServerGreeting : public MySQLCodec {
 public:
+  ServerGreeting(MySQLAttribute *m): MySQLCodec(m){}
   // MySQLCodec
   DecodeStatus parseMessage(Buffer::Instance& buffer, uint32_t len) override;
   void encode(Buffer::Instance&) const override;

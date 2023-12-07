@@ -101,6 +101,8 @@ private:
   Buffer::OwnedImpl read_buffer_;
   Buffer::OwnedImpl write_buffer_;
   std::unique_ptr<Decoder> decoder_;
+
+  MySQLAttribute *mySqlAttribute;
   bool sniffing_{true};
 };
 

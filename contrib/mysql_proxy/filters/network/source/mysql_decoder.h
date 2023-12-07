@@ -40,7 +40,6 @@ public:
 
   virtual void onData(Buffer::Instance& data) PURE;
   virtual MySQLSession& getSession() PURE;
-
   const Extensions::Common::SQLUtils::SQLUtils::DecoderAttributes& getAttributes() const {
     return attributes_;
   }

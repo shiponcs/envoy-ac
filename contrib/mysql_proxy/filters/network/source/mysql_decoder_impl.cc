@@ -17,7 +17,7 @@ void DecoderImpl::parseMessage(Buffer::Instance& message, uint8_t seq, uint32_t 
   switch (session_.getState()) {
   case MySQLSession::State::Init: {
     // Expect Server Challenge packet
-    ServerGreeting greeting;
+    ServerGreeting greeting(mySqlAttribute);
     greeting.decode(message, seq, len);
     session_.setState(MySQLSession::State::ChallengeReq);
     callbacks_.onServerGreeting(greeting);
@@ -25,7 +25,7 @@ void DecoderImpl::parseMessage(Buffer::Instance& message, uint8_t seq, uint32_t 
   }
   case MySQLSession::State::ChallengeReq: {
     // Process Client Handshake Response
-    ClientLogin client_login{};
+    ClientLogin client_login(mySqlAttribute);
     client_login.decode(message, seq, len);
     if (client_login.isSSLRequest()) {
       session_.setState(MySQLSession::State::SslPt);
@@ -140,7 +140,7 @@ void DecoderImpl::parseMessage(Buffer::Instance& message, uint8_t seq, uint32_t 
 
   // Process Command
   case MySQLSession::State::Req: {
-    Command command{};
+    Command command(mySqlAttribute);
     command.decode(message, seq, len);
     session_.setState(MySQLSession::State::ReqResp);
     callbacks_.onCommand(command);
@@ -149,7 +149,7 @@ void DecoderImpl::parseMessage(Buffer::Instance& message, uint8_t seq, uint32_t 
 
   // Process Command Response
   case MySQLSession::State::ReqResp: {
-    CommandResponse command_resp{};
+    CommandResponse command_resp(mySqlAttribute);
     command_resp.decode(message, seq, len);
     callbacks_.onCommandResponse(command_resp);
     break;
@@ -219,12 +219,12 @@ void DecoderImpl::onData(Buffer::Instance& data) {
   while (!BufferHelper::endOfBuffer(data) && decode(data)) {
   }
 }
-
-DecoderFactoryImpl DecoderFactoryImpl::instance_;
-
-DecoderPtr DecoderFactoryImpl::create(DecoderCallbacks& callbacks) {
-  return std::make_unique<DecoderImpl>(callbacks);
-}
+// shiponcs: commeting it out, because it was never used in the code
+//DecoderFactoryImpl DecoderFactoryImpl::instance_;
+//
+//DecoderPtr DecoderFactoryImpl::create(DecoderCallbacks& callbacks) {
+//  return std::make_unique<DecoderImpl>(callbacks);
+//}
 
 } // namespace MySQLProxy
 } // namespace NetworkFilters

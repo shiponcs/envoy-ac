@@ -19,7 +19,13 @@ namespace MySQLProxy {
 MySQLFilterConfig::MySQLFilterConfig(const std::string& stat_prefix, Stats::Scope& scope)
     : scope_(scope), stats_(generateStats(stat_prefix, scope)) {}
 
-MySQLFilter::MySQLFilter(MySQLFilterConfigSharedPtr config) : config_(std::move(config)) {}
+MySQLFilter::MySQLFilter(MySQLFilterConfigSharedPtr config) : config_(std::move(config)) {
+  using namespace std;
+  if(!mySqlAttribute) {
+    mySqlAttribute = new MySQLAttribute();
+  }
+  std::cout << "MySQLFilter::MySQLFilter(...)\n";
+}
 
 void MySQLFilter::initializeReadFilterCallbacks(Network::ReadFilterCallbacks& callbacks) {
   read_callbacks_ = &callbacks;
@@ -69,7 +75,7 @@ void MySQLFilter::doDecode(Buffer::Instance& buffer) {
 }
 
 DecoderPtr MySQLFilter::createDecoder(DecoderCallbacks& callbacks) {
-  return std::make_unique<DecoderImpl>(callbacks);
+  return std::make_unique<DecoderImpl>(callbacks, mySqlAttribute);
 }
 
 void MySQLFilter::onProtocolError() { config_->stats_.protocol_errors_.inc(); }

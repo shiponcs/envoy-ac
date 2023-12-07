@@ -13,6 +13,8 @@ namespace MySQLProxy {
 constexpr int UNSET_BYTES = 23;
 class ClientLogin : public MySQLCodec {
 public:
+
+  ClientLogin(MySQLAttribute *m): MySQLCodec(m){}
   // MySQLCodec
   DecodeStatus parseMessage(Buffer::Instance& buffer, uint32_t len) override;
   void encode(Buffer::Instance&) const override;

@@ -126,6 +126,11 @@ DecodeStatus ClientLogin::parseResponse41(Buffer::Instance& buffer) {
     ENVOY_LOG(debug, "error when parsing username of client login message");
     return DecodeStatus::Failure;
   }
+  if(!mySqlAttribute) {
+    std::cout << "mySqlAttribute is NULL ************\n";
+  }else {
+    mySqlAttribute->attributes["username"] = username_;
+  }
   if (client_cap_ & CLIENT_PLUGIN_AUTH_LENENC_CLIENT_DATA) {
     uint64_t auth_len;
     if (BufferHelper::readLengthEncodedInteger(buffer, auth_len) != DecodeStatus::Success) {

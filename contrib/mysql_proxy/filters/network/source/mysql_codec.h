@@ -5,6 +5,10 @@
 #include "source/common/buffer/buffer_impl.h"
 #include "source/common/common/logger.h"
 
+
+
+
+
 namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
@@ -122,12 +126,31 @@ enum DecodeStatus : uint8_t {
   Failure = 1,
 };
 
+/**
+ * For audit tool purpose. This class will be used to share information between classes.
+ */
+class MySQLAttribute {
+public:
+    std::map<std::string, std::string> attributes;
+};
+
+
 class MySQLCodec : public Logger::Loggable<Logger::Id::filter> {
 public:
-  enum class PktType {
+    MySQLCodec(MySQLAttribute* mySqlAttribute) {
+
+      std::cout << "MySQLCodec(MySQLAttribute* mySqlAttribute) called\n";
+      this->mySqlAttribute = mySqlAttribute;
+    }
+
+    MySQLCodec() {}
+
+    enum class PktType {
     MysqlRequest = 0,
     MysqlResponse = 1,
   };
+
+  MySQLAttribute* mySqlAttribute;
 
   virtual ~MySQLCodec() = default;
 
@@ -138,6 +161,8 @@ public:
     seq_ = seq;
     return parseMessage(data, len);
   }
+
+
 
 protected:
   friend class MySQLTestUtils;

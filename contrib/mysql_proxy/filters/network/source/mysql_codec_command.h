@@ -12,6 +12,7 @@ namespace MySQLProxy {
 
 class Command : public MySQLCodec {
 public:
+  Command(MySQLAttribute *m): MySQLCodec(m){}
   enum class Cmd {
     Null = -1,
     Sleep = 0,
@@ -62,6 +63,7 @@ private:
  */
 class CommandResponse : public MySQLCodec {
 public:
+  CommandResponse(MySQLAttribute *m): MySQLCodec(m){}
   // MySQLCodec
   DecodeStatus parseMessage(Buffer::Instance&, uint32_t) override;
   void encode(Buffer::Instance&) const override;

@@ -1,8 +1,8 @@
 ARG ENVOY_IMAGE="${ENVOY_IMAGE:-envoyproxy/envoy}"
-ARG ENVOY_VARIANT="${ENVOY_VARIANT:-dev}"
+ARG ENVOY_VARIANT="${ENVOY_VARIANT:1.25.0}"
 
 
-FROM ${ENVOY_IMAGE}:${ENVOY_VARIANT} as envoy-base
+FROM envoyproxy/envoy:contrib-v1.22.8 as envoy-base
 ARG ENVOY_CONFIG=envoy.yaml
 ENV ENVOY_CONFIG="$ENVOY_CONFIG"
 ENV DEBIAN_FRONTEND=noninteractive

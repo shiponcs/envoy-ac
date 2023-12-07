@@ -66,6 +66,7 @@ public:
   virtual Result onData(Buffer::Instance& data, bool frontend) PURE;
   virtual PostgresSession& getSession() PURE;
 
+
   const Extensions::Common::SQLUtils::SQLUtils::DecoderAttributes& getAttributes() const {
     return attributes_;
   }
