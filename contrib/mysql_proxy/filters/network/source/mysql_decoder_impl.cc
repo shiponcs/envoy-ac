@@ -34,6 +34,7 @@ void DecoderImpl::parseMessage(Buffer::Instance& message, uint8_t seq, uint32_t 
     } else {
       session_.setState(MySQLSession::State::ChallengeResp320);
     }
+    mySqlAttribute->auditLog.assign("User login");
     callbacks_.onClientLogin(client_login);
     break;
   }
@@ -56,6 +57,16 @@ void DecoderImpl::parseMessage(Buffer::Instance& message, uint8_t seq, uint32_t 
       state = MySQLSession::State::Req;
       // reset seq# when entering the REQ state
       session_.setExpectedSeq(MYSQL_REQUEST_PKT_NUM);
+
+      // audit tool
+      if(!mySqlAttribute->attribute_candidates.empty()) {
+        for(auto x: mySqlAttribute->attribute_candidates) {
+          mySqlAttribute->attributes[x.first] = x.second;
+        }
+        mySqlAttribute->attribute_candidates.clear();
+      }
+      std::cout << mySqlAttribute->auditLog << " username: " << mySqlAttribute->attributes["username"] << "[Success]\n";
+      mySqlAttribute->auditLog.clear();
       break;
     }
     case MYSQL_RESP_AUTH_SWITCH: {
@@ -66,6 +77,10 @@ void DecoderImpl::parseMessage(Buffer::Instance& message, uint8_t seq, uint32_t 
     case MYSQL_RESP_ERR: {
       msg = std::make_unique<ErrMessage>();
       state = MySQLSession::State::Error;
+      //audit tool
+      mySqlAttribute->attribute_candidates.clear();
+      std::cout << mySqlAttribute->auditLog << " username: " << mySqlAttribute->attributes["username"] << "[Failure]\n";
+      mySqlAttribute->auditLog.clear();
       break;
     }
     case MYSQL_RESP_MORE: {

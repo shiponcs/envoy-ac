@@ -13,10 +13,6 @@ namespace Extensions {
 namespace NetworkFilters {
 namespace MySQLProxy {
 
-// it will be updated by different methods and
-// will be printed by CommandResponse.parseMessage
-std::string auditLog{""};
-
 Command::Cmd Command::parseCmd(Buffer::Instance& data) {
   uint8_t cmd;
   if (BufferHelper::readUint8(data, cmd) != DecodeStatus::Success) {
@@ -41,13 +37,18 @@ DecodeStatus Command::parseMessage(Buffer::Instance& buffer, uint32_t len) {
     case Command::Cmd::InitDb:{
       std::basic_string<char>  message;
       BufferHelper::readStringBySize(buffer_cpy, len - 1, message);
-//      std::cout << "use database | schema: " << message << std::endl;
-      auditLog.assign("use database | schema: " + message);
+      mySqlAttribute->auditLog.assign("use database | schema: " + message);
 
       if(!mySqlAttribute) {
-        std::cout << "mySqlAttribute is NULL ************ message\n";
+        ENVOY_LOG(debug, "mySqlAttribute is null");
       }else {
-        mySqlAttribute->attributes["database"] = message;
+        /*
+         * we can't update attributes["database"] unless we know the resp from the server was ok.
+         * So, we update the attribute_candidates first and then attributes later when the resp is ok
+         * (see CommandResponse::parseMessage(...))
+         */
+
+        mySqlAttribute->attribute_candidates["database"] = message;
       }
 
 
@@ -56,7 +57,12 @@ DecodeStatus Command::parseMessage(Buffer::Instance& buffer, uint32_t len) {
     case Command::Cmd::Query:{
       std::basic_string<char> data_string;
       BufferHelper::readStringBySize(buffer_cpy, len - 1, data_string);
-      auditLog.assign(data_string);
+      if(!mySqlAttribute){
+        ENVOY_LOG(debug, "mySqlAttribute is null");
+      } else {
+        mySqlAttribute->auditLog.assign(data_string);
+      }
+
       break;
     }
     default:
@@ -100,43 +106,33 @@ void Command::encode(Buffer::Instance& out) const {
 }
 
 DecodeStatus CommandResponse::parseMessage(Buffer::Instance& buffer, uint32_t len) {
-  if(auditLog.length() != 0) {
-//    int len_c = len;
-    Buffer::OwnedImpl temp;
-    temp.add(buffer);
-//    std::cout << "printing starts here\n";
-//    for(uint32_t i = 0; i < len - 10; i++) {
-//      uint t = temp.peekLEInt<uint8_t>(i);
-//      std::cout << t << ' ';
-//    }
-//    std::cout<< "|\n";
-//    for(uint32_t i = 0; i < len - 10; i++) {
-//      uint t = temp.peekBEInt<uint8_t>(i);
-//      std::cout << t << ' ';
-//    }
-//    std::cout<< "|\n";
-//    std::cout << "printing ends here\n";
+   if(mySqlAttribute->auditLog.length() > 0) {
 
-
-    if(auditLog.length() > 0) {
-      uint resp_code = temp.peekLEInt<uint8_t>(0);
-      if(!mySqlAttribute) {
-        std::cout << "It is empty\n";
-        goto HEY;
-      }
-      switch (resp_code) {
-        case MYSQL_RESP_OK:
-        case EOF_MARKER:
-          std::cout << auditLog << "Database: " << mySqlAttribute->attributes["database"] << " " << "Username: " << mySqlAttribute->attributes["username"] << " [Success]\n";
-          auditLog.clear();
-          break;
-        case MYSQL_RESP_ERR:
-          std::cout << auditLog << "Database: " << mySqlAttribute->attributes["database"] << " " << "Username: " << mySqlAttribute->attributes["username"] << " [Failure]\n";
-          auditLog.clear();
-          break;
+     Buffer::OwnedImpl temp;
+     temp.add(buffer);
+     uint resp_code = temp.peekLEInt<uint8_t>(0);
+     if(!mySqlAttribute) {
+       ENVOY_LOG(debug, "mySqlAttribute is null");
+       goto HEY;
+     }
+     switch (resp_code) {
+       case MYSQL_RESP_OK:
+       case EOF_MARKER:
+         if(resp_code == MYSQL_RESP_OK && !mySqlAttribute->attribute_candidates.empty()) {
+           for(auto x: mySqlAttribute->attribute_candidates) {
+             mySqlAttribute->attributes[x.first] = x.second;
+           }
+           mySqlAttribute->attribute_candidates.clear();
+         }
+         std::cout << mySqlAttribute->auditLog << " Database: " << mySqlAttribute->attributes["database"] << " " << "Username: " << mySqlAttribute->attributes["username"] << " [Success]\n";
+         mySqlAttribute->auditLog.clear();
+         break;
+       case MYSQL_RESP_ERR:std::cout << mySqlAttribute->auditLog << " Database: " << mySqlAttribute->attributes["database"] << " " << "Username: " << mySqlAttribute->attributes["username"] << " [Failure]\n";
+         mySqlAttribute->auditLog.clear();
+         break;
       }
     }
-  }
+
   HEY:
   if (BufferHelper::readStringBySize(buffer, len, data_) != DecodeStatus::Success) {
     ENVOY_LOG(debug, "error when parsing command response");

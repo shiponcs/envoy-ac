@@ -24,7 +24,7 @@ MySQLFilter::MySQLFilter(MySQLFilterConfigSharedPtr config) : config_(std::move(
   if(!mySqlAttribute) {
     mySqlAttribute = new MySQLAttribute();
   }
-  std::cout << "MySQLFilter::MySQLFilter(...)\n";
+  ENVOY_LOG(debug, "MySQLFilter::MySQLFilter(...)");
 }
 
 void MySQLFilter::initializeReadFilterCallbacks(Network::ReadFilterCallbacks& callbacks) {

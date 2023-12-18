@@ -8,10 +8,7 @@ namespace MySQLProxy {
 
 class DecoderImpl : public Decoder, public Logger::Loggable<Logger::Id::filter> {
 public:
-  DecoderImpl(DecoderCallbacks& callbacks, MySQLAttribute *mySqlAttribute) : mySqlAttribute(mySqlAttribute), callbacks_(callbacks) {
-    using namespace std;
-    std::cout << "DecoderImpl(DecoderCallbacks& callbacks)\n";
-  }
+  DecoderImpl(DecoderCallbacks& callbacks, MySQLAttribute *mySqlAttribute) : mySqlAttribute(mySqlAttribute), callbacks_(callbacks) {}
 
   MySQLAttribute *mySqlAttribute;
 

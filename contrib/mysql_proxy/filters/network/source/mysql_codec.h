@@ -132,14 +132,14 @@ enum DecodeStatus : uint8_t {
 class MySQLAttribute {
 public:
     std::map<std::string, std::string> attributes;
+    std::string auditLog{""};
+    std::map<std::string, std::string> attribute_candidates;
 };
 
 
 class MySQLCodec : public Logger::Loggable<Logger::Id::filter> {
 public:
     MySQLCodec(MySQLAttribute* mySqlAttribute) {
-
-      std::cout << "MySQLCodec(MySQLAttribute* mySqlAttribute) called\n";
       this->mySqlAttribute = mySqlAttribute;
     }
 

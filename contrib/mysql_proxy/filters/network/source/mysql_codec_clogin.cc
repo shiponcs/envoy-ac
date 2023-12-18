@@ -32,9 +32,22 @@ void ClientLogin::setUsername(const std::string& username) {
   if (username.length() <= MYSQL_MAX_USER_LEN) {
     username_.assign(username);
   }
+
+  if(!mySqlAttribute) {
+    ENVOY_LOG(debug, "mySqlAttribute is null");
+  }else {
+    mySqlAttribute->attributes["username"] = username_;
+  }
 }
 
-void ClientLogin::setDb(const std::string& db) { db_ = db; }
+void ClientLogin::setDb(const std::string& db) {
+  db_ = db;
+  if(!mySqlAttribute) {
+    ENVOY_LOG(debug, "mySqlAttribute is null");
+  }else {
+    mySqlAttribute->attributes["database"] = db;
+  }
+}
 
 void ClientLogin::setAuthResp(const std::vector<uint8_t>& auth_resp) { auth_resp_ = auth_resp; }
 
@@ -126,11 +139,7 @@ DecodeStatus ClientLogin::parseResponse41(Buffer::Instance& buffer) {
     ENVOY_LOG(debug, "error when parsing username of client login message");
     return DecodeStatus::Failure;
   }
-  if(!mySqlAttribute) {
-    std::cout << "mySqlAttribute is NULL ************\n";
-  }else {
-    mySqlAttribute->attributes["username"] = username_;
-  }
+  setUsername(username_);
   if (client_cap_ & CLIENT_PLUGIN_AUTH_LENENC_CLIENT_DATA) {
     uint64_t auth_len;
     if (BufferHelper::readLengthEncodedInteger(buffer, auth_len) != DecodeStatus::Success) {
@@ -163,6 +172,7 @@ DecodeStatus ClientLogin::parseResponse41(Buffer::Instance& buffer) {
     ENVOY_LOG(debug, "error when parsing db name of client login message");
     return DecodeStatus::Failure;
   }
+  setDb(db_);
   if ((client_cap_ & CLIENT_PLUGIN_AUTH) &&
       (BufferHelper::readString(buffer, auth_plugin_name_) != DecodeStatus::Success)) {
     ENVOY_LOG(debug, "error when parsing auth plugin name of client login message");
@@ -224,6 +234,9 @@ DecodeStatus ClientLogin::parseResponse320(Buffer::Instance& buffer, uint32_t re
     ENVOY_LOG(debug, "error when parsing username of client login message");
     return DecodeStatus::Failure;
   }
+
+  setUsername(username_);
+
   if (client_cap_ & CLIENT_CONNECT_WITH_DB) {
     if (BufferHelper::readVector(buffer, auth_resp_) != DecodeStatus::Success) {
       ENVOY_LOG(debug, "error when parsing auth response of client login message");
@@ -233,6 +246,7 @@ DecodeStatus ClientLogin::parseResponse320(Buffer::Instance& buffer, uint32_t re
       ENVOY_LOG(debug, "error when parsing db name of client login message");
       return DecodeStatus::Failure;
     }
+    setDb(db_);
   } else {
     int consumed_len = origin_len - buffer.length();
     if (BufferHelper::readVectorBySize(buffer, remain_len - consumed_len, auth_resp_) !=
