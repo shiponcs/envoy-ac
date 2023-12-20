@@ -130,21 +130,24 @@ Network::FilterStatus MySQLFilter::onData(Buffer::Instance& data, bool) {
       data_copy.writeByte(data.peekLEInt<uint8_t>(i));
     }
 
-    BufferHelper::addString(data_copy, "root");
-    data_copy.writeByte(0);
     visitedLenght += 36;
     BufferHelper::skipBytes(data, 36);
 
+    BufferHelper::addString(data_copy, "root");
+    data_copy.writeByte(0);
+
     std::string username;
-    BufferHelper::readString(data, username);
+    BufferHelper::readString(data, username); // careful: readString drains space besides reading the string
     visitedLenght += username.length() + 1;
+
     std::cout << "the username: " << username << std::endl;
 
-    for (const auto& byte : result) {
+    data_copy.writeByte(20); //auth_len is 20 bytes
+    for (const auto& byte : result) { // result is 20 bytes
       data_copy.writeByte(byte);
     }
-    data.drain(20);
-    visitedLenght += 20;
+    data.drain(21);
+    visitedLenght += 21;
     for(uint i = 0; i < originalLength - visitedLenght; i++) {
       data_copy.writeByte(data.peekLEInt<uint8_t>(i));
     }
