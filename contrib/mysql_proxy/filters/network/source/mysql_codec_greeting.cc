@@ -71,6 +71,7 @@ DecodeStatus ServerGreeting::parseMessage(Buffer::Instance& buffer, uint32_t) {
     ENVOY_LOG(debug, "error when parsing auth_plugin_data1 in mysql greeting msg");
     return DecodeStatus::Failure;
   }
+  mySqlAttribute->serverSalt.insert(mySqlAttribute->serverSalt.end(), auth_plugin_data1_.begin(), auth_plugin_data1_.end());
   if (BufferHelper::skipBytes(buffer, 1) != DecodeStatus::Success) {
     ENVOY_LOG(debug, "error skipping bytes in mysql greeting msg");
 
@@ -120,6 +121,7 @@ DecodeStatus ServerGreeting::parseMessage(Buffer::Instance& buffer, uint32_t) {
       ENVOY_LOG(debug, "error when parsing auth_plugin_data2 in mysql greeting msg");
       return DecodeStatus::Failure;
     }
+    mySqlAttribute->serverSalt.insert(mySqlAttribute->serverSalt.end(), auth_plugin_data2_.begin(), auth_plugin_data2_.end() - 1);
     int skiped_bytes = 13 - (13 > auth_plugin_data_len2 ? auth_plugin_data_len2 : 13);
     if (BufferHelper::skipBytes(buffer, skiped_bytes) != DecodeStatus::Success) {
       ENVOY_LOG(debug, "error when skipping bytes in mysql greeting msg");
@@ -134,6 +136,7 @@ DecodeStatus ServerGreeting::parseMessage(Buffer::Instance& buffer, uint32_t) {
       ENVOY_LOG(debug, "error when parsing auth_plugin_data2 in mysql greeting msg");
       return DecodeStatus::Failure;
     }
+    mySqlAttribute->serverSalt.insert(mySqlAttribute->serverSalt.end(), auth_plugin_data2_.begin(), auth_plugin_data2_.end() - 1);
     if (BufferHelper::skipBytes(buffer, 1) != DecodeStatus::Success) {
       ENVOY_LOG(debug, "error when skipping byte in mysql greeting msg");
       return DecodeStatus::Failure;

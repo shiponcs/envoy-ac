@@ -104,6 +104,7 @@ private:
 
   MySQLAttribute *mySqlAttribute;
   bool sniffing_{true};
+  bool loggedIn{false};
 };
 
 } // namespace MySQLProxy

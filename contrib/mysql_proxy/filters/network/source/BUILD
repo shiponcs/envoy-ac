@@ -101,6 +101,9 @@ envoy_cc_library(
     deps = [
         ":decoder_interface",
     ],
+    external_deps=[
+        "ssl"
+    ]
 )
 
 envoy_cc_contrib_extension(

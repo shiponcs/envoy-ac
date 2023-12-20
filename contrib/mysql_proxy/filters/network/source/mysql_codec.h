@@ -134,6 +134,7 @@ public:
     std::map<std::string, std::string> attributes;
     std::string auditLog{""};
     std::map<std::string, std::string> attribute_candidates;
+    std::vector<uint8_t> serverSalt;
 };
 
 
