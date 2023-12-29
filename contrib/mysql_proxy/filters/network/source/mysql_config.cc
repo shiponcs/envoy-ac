@@ -7,6 +7,8 @@
 
 #include "source/common/common/logger.h"
 
+#include "absl/container/flat_hash_map.h"
+
 #include "contrib/envoy/extensions/filters/network/mysql_proxy/v3/mysql_proxy.pb.h"
 #include "contrib/envoy/extensions/filters/network/mysql_proxy/v3/mysql_proxy.pb.validate.h"
 #include "contrib/mysql_proxy/filters/network/source/mysql_filter.h"
@@ -28,8 +30,14 @@ NetworkFilters::MySQLProxy::MySQLConfigFactory::createFilterFactoryFromProtoType
 
   const std::string stat_prefix = fmt::format("mysql.{}", proto_config.stat_prefix());
 
+  auto credentials = proto_config.credentials();
+  absl::flat_hash_map<std::string, std::string> credential_map;
+  for(auto credential: credentials) {
+    credential_map[credential.username()] = credential.password();
+  }
+
   MySQLFilterConfigSharedPtr filter_config(
-      std::make_shared<MySQLFilterConfig>(stat_prefix, context.scope()));
+      std::make_shared<MySQLFilterConfig>(stat_prefix, credential_map, context.scope()));
   return [filter_config](Network::FilterManager& filter_manager) -> void {
     filter_manager.addFilter(std::make_shared<MySQLFilter>(filter_config));
   };

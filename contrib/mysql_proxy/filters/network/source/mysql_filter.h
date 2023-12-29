@@ -18,6 +18,7 @@
 #include "contrib/mysql_proxy/filters/network/source/mysql_decoder.h"
 #include "contrib/mysql_proxy/filters/network/source/mysql_session.h"
 
+
 namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
@@ -49,12 +50,13 @@ struct MySQLProxyStats {
  */
 class MySQLFilterConfig {
 public:
-  MySQLFilterConfig(const std::string& stat_prefix, Stats::Scope& scope);
+  MySQLFilterConfig(const std::string& stat_prefix, absl::flat_hash_map<std::string, std::string> credentials, Stats::Scope& scope);
 
   const MySQLProxyStats& stats() { return stats_; }
 
   Stats::Scope& scope_;
   MySQLProxyStats stats_;
+  absl::flat_hash_map<std::string, std::string> credentials;
 
 private:
   MySQLProxyStats generateStats(const std::string& prefix, Stats::Scope& scope) {

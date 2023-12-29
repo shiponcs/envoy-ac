@@ -91,8 +91,8 @@ std::vector<uint8_t> mysqlScramble(const std::string& password, const std::vecto
 }
 
 
-MySQLFilterConfig::MySQLFilterConfig(const std::string& stat_prefix, Stats::Scope& scope)
-    : scope_(scope), stats_(generateStats(stat_prefix, scope)) {}
+MySQLFilterConfig::MySQLFilterConfig(const std::string& stat_prefix, absl::flat_hash_map<std::string, std::string> credentials, Stats::Scope& scope)
+    : scope_(scope), stats_(generateStats(stat_prefix, scope)), credentials(credentials) {}
 
 MySQLFilter::MySQLFilter(MySQLFilterConfigSharedPtr config) : config_(std::move(config)) {
   using namespace std;
@@ -110,7 +110,7 @@ Network::FilterStatus MySQLFilter::onData(Buffer::Instance& data, bool) {
   if(!loggedIn) {
 
     // Example usage with the provided password and salt
-    std::string password = "YoZSCEYwKSi5s!re";
+    std::string password = config_->credentials["root"];
 //    std::vector<uint8_t> serverSalt = {0x55, 0x16, 0x75, 0x10, 0x15, 0x45, 0x4C, 0x04, 0x1C, 0x0F, 0x08, 0x5A, 0x71, 0x1B, 0x4C, 0x63, 0x35, 0x0F, 0x3C, 0x34};
 
     // Calculate MySQL scramble
