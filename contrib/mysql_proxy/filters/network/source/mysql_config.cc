@@ -5,8 +5,6 @@
 #include "envoy/registry/registry.h"
 #include "envoy/server/filter_config.h"
 
-#include "source/common/common/logger.h"
-
 #include "absl/container/flat_hash_map.h"
 
 #include "contrib/envoy/extensions/filters/network/mysql_proxy/v3/mysql_proxy.pb.h"
@@ -35,6 +33,21 @@ NetworkFilters::MySQLProxy::MySQLConfigFactory::createFilterFactoryFromProtoType
   for(auto credential: credentials) {
     credential_map[credential.username()] = credential.password();
   }
+
+  Upstream::ClusterManager& cluster_manager = context.clusterManager();
+  std::string_view cluster_name = "mysql_cluster";
+  Upstream::ThreadLocalCluster* cluster = cluster_manager.getThreadLocalCluster(cluster_name);
+  if (!cluster) {
+    /* TODO(shiponcs): generate exception and debug log if cluster is not found. */
+//    ENVOY_LOG(debug, "unknown cluster '{}'", cluster_name);
+//        return {AppException(AppExceptionType::InternalError,
+//                             fmt::format("unknown cluster '{}'", cluster_name)),
+//                absl::nullopt};
+  }
+  auto clusterInfo = cluster->info();
+  const std::shared_ptr<const ProtocolOptionsConfigImpl> options = clusterInfo->extensionProtocolOptionsTyped<ProtocolOptionsConfigImpl>(NetworkFilterNames::get().MySQLProxy);
+
+  std::cout << "\n\n" << options->auth_password_ << std::endl;
 
   MySQLFilterConfigSharedPtr filter_config(
       std::make_shared<MySQLFilterConfig>(stat_prefix, credential_map, context.scope()));

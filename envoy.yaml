@@ -18,10 +18,10 @@ static_resources:
             cluster: mysql-cluster
       
   clusters:
-  - name: mysql-cluster
+  - name: mysql_cluster
     type: STRICT_DNS
     load_assignment:
-      cluster_name: mysql-cluster
+      cluster_name: mysql_cluster
       endpoints:
       - lb_endpoints:
         - endpoint:
@@ -29,6 +29,25 @@ static_resources:
               socket_address:
                 address: 172.104.37.137
                 port_value: 3306
+    typed_extension_protocol_options:
+      envoy.filters.network.mysql_proxy:
+        "@type": type.googleapis.com/envoy.extensions.filters.network.mysql_proxy.v3.MySQLProtocolOptions
+        auth_password: "cluster 1 password"
+  - name: mysql_cluster_1
+    type: STRICT_DNS
+    load_assignment:
+      cluster_name: mysql_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: 172.104.37.137
+                port_value: 3306
+    typed_extension_protocol_options:
+      envoy.filters.network.mysql_proxy:
+        "@type": type.googleapis.com/envoy.extensions.filters.network.mysql_proxy.v3.MySQLProtocolOptions
+        auth_password: "cluster 2 password"
   
         
 admin:
